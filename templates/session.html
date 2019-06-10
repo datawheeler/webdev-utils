@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <title>Flask_Chat_App</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src='https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js'></script>
+  </head>
+  <body>
+
+    <h3 style='color: #ccc;font-size: 30px;'>No message yet..</h3>
+    <div class="message_holder"></div>
+
+    <form action="" method="POST">
+      <input type="text" class="username" placeholder="User Name"/>
+      <input type="text" class="message" placeholder="Messages"/>
+      <input type="submit"/>
+    </form>
+
+    <script type="text/javascript">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on( 'connect', function() {
+        socket.emit( 'my event', {
+          data: 'User Connected'
+        } )
+        var form = $( 'form' ).on( 'submit', function( e ) {
+          e.preventDefault()
+          let user_name = $( 'input.username' ).val()
+          let user_input = $( 'input.message' ).val()
+          socket.emit( 'my event', {
+            user_name : user_name,
+            message : user_input
+          } )
+          $( 'input.message' ).val( '' ).focus()
+        } )
+      } )
+      var dt = 'undefined'
+      socket.on( 'my response', function( msg ) {
+        if( typeof msg.user_name !== 'undefined' ) {
+          $( 'h3' ).remove()
+          if ($('#my_response_table').length == 0){
+
+              var table = document.createElement('table');
+              table.id = 'my_response_table'
+              table.innerHTML = "<thead><tr><th>Timestamp</th><th>User</th><th>Message</th></tr></thead><tfoot><tr><th>Timestamp</th><th>User</th><th>Message</th></tr></tfoot>"
+
+              $( 'div.message_holder' ).prepend(table);
+              dt = $('#my_response_table').DataTable(
+                            {"autoWidth": false,
+                            "dom": '<"toolbar">lfrtip',
+                            "order": [[ 0, "desc" ]],
+                            fnInitComplete: function(){
+                            $('div.toolbar').html('<input type="checkbox" id="chk_pause" value="1">Pause<br>');
+                            }}); 
+              
+              
+          }
+          
+            console.log( msg )
+            if (dt != 'undefined')
+                dt.row.add([msg.Timestamp, msg.user_name, msg.message]);
+            console.log('chk_pause = ' + $('#chk_pause').checked)
+            if (!document.getElementById("chk_pause").checked){
+                dt.columns.adjust();
+                dt.draw(false);
+            }
+        }
+      })
+    </script>
+
+  </body>
+</html>
